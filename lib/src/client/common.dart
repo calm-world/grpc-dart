@@ -44,6 +44,7 @@ abstract class Response {
 /// A gRPC response producing a single value.
 class ResponseFuture<R> extends DelegatingFuture<R>
     with _ResponseMixin<dynamic, R> {
+  @override
   final ClientCall _call;
 
   static R? _ensureOnlyOneResponse<R>(R? previous, dynamic element) {
@@ -68,14 +69,18 @@ class ResponseFuture<R> extends DelegatingFuture<R>
         super(future);
 
   /// `clientCall` maybe be lost when converting from Future to ResponseFuture
-  static ResponseFuture<T> wrap<T>(Future<T> future, {ClientCall? clientCall}) {
+  static ResponseFuture<T> wrap<T>(
+    Future<T> future, {
+    required ClientCall clientCall,
+  }) {
     return ResponseFuture._wrap(
       future,
-      clientCall: (clientCall ?? _unwrap(future)),
+      clientCall: _unwrap(future) ?? clientCall,
     );
   }
 
-  static ClientCall _unwrap(Future future) => (future as ResponseFuture)._call;
+  static ClientCall? _unwrap(Future future) =>
+      future is ResponseFuture ? future._call : null;
 
   @override
   ResponseFuture<S> then<S>(FutureOr<S> Function(R p1) onValue,
